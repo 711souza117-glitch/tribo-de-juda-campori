@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Painel administrativo • Tribo de Judá</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#f7a900;--bg:#0b0c0a;--panel:#171811;--muted:#aaa99d;--line:#38392d}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 10% 0%,#25200f 0,transparent 38%),var(--bg);color:#f7f4e9;font-family:Inter,Arial,sans-serif}
+main{width:min(600px,calc(100% - 28px));margin:42px auto}.brand{color:var(--gold);font:800 30px "Barlow Condensed",sans-serif;letter-spacing:1px}
+.panel{margin-top:18px;padding:24px;border:1px solid var(--line);border-radius:16px;background:var(--panel)}
+p{font-size:13px;line-height:1.6;color:#c6c5bb}label{display:block;font-size:12px;margin:16px 0 7px;color:#dedbcc}
+input{width:100%;padding:13px;border-radius:10px;background:#0b0c0a;border:1px solid #454638;color:white;font:inherit}
+button{width:100%;margin-top:18px;padding:14px;border:0;border-radius:10px;background:linear-gradient(100deg,#f4a300,#ffd15a);font-weight:800;cursor:pointer}
+.result{display:none;margin-top:14px;padding:12px;border-radius:10px;background:#202118;color:#f5d98e;font-size:13px;line-height:1.6}
+.small{font-size:11px;color:var(--muted)}
+</style></head>
+<body><main>
+<div class="brand">TRIBO DE JUDÁ · CAMPORI 2026</div>
+<div class="panel">
+<h1>Atualizar arrecadação</h1>
+<p>Informe o total acumulado confirmado pela equipe. O site calcula a porcentagem e move o ônibus automaticamente para todos os visitantes.</p>
+<form id="adminForm">
+<label for="secret">Senha administrativa</label><input id="secret" type="password" autocomplete="current-password" required>
+<label for="raised">Total arrecadado até agora (R$)</label><input id="raised" type="number" min="0" max="10000000" step="0.01" placeholder="Ex.: 4200" required>
+<label for="note">Observação (opcional)</label><input id="note" type="text" maxlength="160" placeholder="Ex.: atualização após doações do sábado">
+<button type="submit" id="submit">Salvar atualização</button>
+</form>
+<div class="result" id="result" role="status"></div>
+<p class="small">A senha é validada no servidor. Use uma senha forte e mantenha-a somente com os responsáveis pela campanha.</p>
+</div>
+<p><a href="/" style="color:#ffd15a">← Voltar ao site público</a></p>
+</main>
+<script>
+const form=document.getElementById("adminForm"),button=document.getElementById("submit"),result=document.getElementById("result");
+form.addEventListener("submit",async e=>{
+e.preventDefault();button.disabled=true;button.textContent="Salvando…";result.style.display="none";
+try{
+const r=await fetch("/api/admin/update",{method:"POST",headers:{"Content-Type":"application/json","x-admin-secret":document.getElementById("secret").value},body:JSON.stringify({raised:Number(document.getElementById("raised").value),note:document.getElementById("note").value})});
+const d=await r.json();if(!r.ok)throw new Error(d.error||"Não foi possível salvar.");
+result.textContent="Atualização salva! Total: "+Number(d.raised).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})+" · "+d.percent+"% da meta. O mapa público será atualizado automaticamente.";
+result.style.display="block";
+}catch(err){result.textContent=err.message;result.style.display="block";}
+finally{button.disabled=false;button.textContent="Salvar atualização";}
+});
+</script></body></html>
